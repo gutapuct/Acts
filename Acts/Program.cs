@@ -15,7 +15,6 @@ namespace Acts
             dict.Add("Example_1", "Первый пример");
             dict.Add("Example_2", "Второй пример");
             dict.Add("Example_3", "Третий пример");
-            dict.Add("Example_4", "Четвертый пример");
 
         }
     }
