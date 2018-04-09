@@ -23,10 +23,10 @@ namespace Acts
         {
             var excelApp = new Microsoft.Office.Interop.Excel.Application();
 
-            //Книга
+            //Book
             var workBookExcel = excelApp.Workbooks.Open(Path);
 
-            //Таблица
+            //Table
             var workSheetExcel = (Microsoft.Office.Interop.Excel.Worksheet)workBookExcel.Sheets[1];
 
             var lastCell = workSheetExcel.Cells.SpecialCells(Microsoft.Office.Interop.Excel.XlCellType.xlCellTypeLastCell);
@@ -40,9 +40,9 @@ namespace Acts
                 }
             }
 
-            workBookExcel.Close(false, Type.Missing, Type.Missing); //закрыть не сохраняя
-            excelApp.Quit(); // вышел из Excel
-            GC.Collect(); // убрал за собой
+            workBookExcel.Close(false, Type.Missing, Type.Missing); // Close without save
+            excelApp.Quit(); // Exit from Excel
+            GC.Collect(); // Remove your trash
 
             return result;
         }

@@ -12,61 +12,71 @@ namespace Acts
 {
     class Program
     {
-        static object _lockObject = new object();
-
+        // 0 - path to template
+        // 1 - path to Excel
         static void Main(string[] args)
         {
-            var data = new ExcelImporter("D:\\temp\\Values.xlsx").GetData();
+            Console.WriteLine("Welcome to Act Genereator!!!");
+            Console.WriteLine();
 
-            var path = "D:\\temp\\Template.docx";
-
-            for (var val = 1; val < data.GetLength(1); val++)
+            string[] correctArgs = new string[2];
+            if (args.Length > 0)
             {
-                var dict = new Dictionary<string, string>();
+                correctArgs = SetArgs(args);
+            }
+            else
+            {
+                Console.WriteLine("Please, enter the path to Template:");
+                correctArgs[0] = Console.ReadLine();
+                Console.WriteLine("Thanks. And now, please, enter the path to Excel:");
+                correctArgs[1] = Console.ReadLine();
+            }
 
-                for (var l = 0; l < data.GetLength(0); l++)
+            correctArgs = CheckArgs(correctArgs);
+            new Docs(correctArgs[0], correctArgs[1]).Execute();
+        }
+
+        
+        private static string[] SetArgs (string[] args)
+        {
+            string[] correctArgs = new string[2];
+
+            if (args.Length >= 2)
+            {
+                correctArgs[0] = args[0];
+                correctArgs[1] = args[1];
+            }
+            else
+            {
+                correctArgs[0] = args[0];
+                correctArgs[1] = "C:\\temp\\Template.docx"; //default
+            } 
+
+            return correctArgs;
+        }
+
+        private static string[] CheckArgs (string[] args)
+        {
+            while (true)
+            {
+                if (File.Exists(args[0]) && (args[0].EndsWith(".docx") || args[0].EndsWith(".doc")))
                 {
-                    dict.Add(data[l, 0], data[l, val]);
-                }
-
-                var copypath = $"D:\\temp\\NewDoc_{val}.docx";
-
-                lock (_lockObject)
-                {
-                    File.Copy(path, copypath);
-                }
-
-                using (var doc = WordprocessingDocument.Open(copypath, true))
-                {
-                    var body = doc.MainDocumentPart.Document.Body;
-                    var texts = body.Descendants<Text>();
-
-                    foreach (var pair in dict)
+                    if (File.Exists(args[1]) &&( args[1].EndsWith(".xlsx") || args[1].EndsWith(".xls")))
                     {
-                        //var tokenTexts = texts.Where(t => String.Equals(t.Text, pair.Key));
-                        //foreach (var token in tokenTexts)
-                        //{
-                        //    var parent = token.Parent;
-                        //    var newToken = token.CloneNode(true);
-                        //    var lines = Regex.Split(pair.Value, "\r\n|\r|\n");
-                        //    ((Text)newToken).Text = lines[0];
-                        //    for (int i = 1; i < lines.Length; i++)
-                        //    {
-                        //        parent.AppendChild<Break>(new Break());
-                        //        parent.AppendChild<Text>(new Text(lines[i]));
-                        //    }
-                        //    token.InsertAfterSelf(newToken);
-                        //    token.Remove();
-                        //}
-
-                        var tokenTexts = texts.Where(t => t.Text.Contains(pair.Key));
-                        foreach (var token in tokenTexts)
-                        {
-                            token.Text = token.Text.Replace(pair.Key, pair.Value);
-                        }
+                        return args;
                     }
-
-                    doc.MainDocumentPart.Document.Save();
+                    else
+                    {
+                        Console.WriteLine("The path to Excel is incorrect. Please, enter the correct path");
+                        args[1] = Console.ReadLine();
+                        continue;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("The path to template is incorrect. Please, enter the correct path");
+                    args[0] = Console.ReadLine();
+                    continue;
                 }
             }
         }
