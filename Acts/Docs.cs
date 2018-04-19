@@ -120,7 +120,9 @@ namespace Acts
                     Console.Write(".");
                 }
 
-                var copyPath = $"{Path.GetDirectoryName(PathToTemplate)}\\{randomFolder}\\NewDoc_{value}.docx";
+                System.Threading.Thread.Sleep(10);
+                var date = DateTime.Now.ToString("yyyyMMddhhmmssffff");
+                var copyPath = $"{Path.GetDirectoryName(PathToTemplate)}\\{randomFolder}\\{date}_{value}.docx";
 
                 lock (LockObject)
                 {
