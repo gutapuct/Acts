@@ -24,26 +24,39 @@ namespace Acts
 
         public void Execute()
         {
-            var randomFolder = Guid.NewGuid().ToString();
-            Console.WriteLine("Creating acts...");
-            CreateAllActs(randomFolder);
-            Console.WriteLine("Done.");
-            Console.WriteLine();
+            try
+            {
+                var randomFolder = Guid.NewGuid().ToString();
+                Console.Write("Creating acts...");
+                CreateAllActs(randomFolder);
+                Console.WriteLine("Done.");
+                Console.WriteLine();
 
-            Console.WriteLine("Getting new all files...");
-            var files = GetStreamAllFiles(randomFolder);
-            Console.WriteLine("Done.");
-            Console.WriteLine();
+                Console.WriteLine("Getting new all files...");
+                var files = GetStreamAllFiles(randomFolder);
+                Console.WriteLine("Done.");
+                Console.WriteLine();
 
-            Console.WriteLine("Creating the new general file...");
-            SaveNewFile(files);
-            Console.WriteLine("Done.");
-            Console.WriteLine();
+                Console.Write("Creating the new general file...");
+                SaveNewFile(files);
+                Console.WriteLine("Done.");
+                Console.WriteLine();
 
-            Console.WriteLine("Deleting temp files...");
-            RemoveFiles(randomFolder);
-            Console.WriteLine("Done. Press any key to exit.");
-            Console.ReadKey();
+                Console.WriteLine("Deleting temp files...");
+                RemoveFiles(randomFolder);
+                Console.WriteLine("Done. Press any key to exit.");
+                Console.ReadKey();
+            }
+            catch (Exception ex)
+            {
+#if (DEBUG)
+                Console.WriteLine(ex);
+#else
+                Console.WriteLine(ex.Message); 
+#endif
+                Console.WriteLine("Press any key to exit.");
+                Console.ReadKey();
+            }
         }
 
         private byte[] OpenAndCombine(IList<byte[]> documents)
@@ -64,6 +77,11 @@ namespace Acts
 
                     for (pointer = 1; pointer < documents.Count; pointer++)
                     {
+                        if (pointer % 5 == 0)
+                        {
+                            Console.Write(".");
+                        }
+
                         WordprocessingDocument tempDocument = WordprocessingDocument.Open(new MemoryStream(documents[pointer]), true);
                         XElement tempBody = XElement.Parse(tempDocument.MainDocumentPart.Document.Body.OuterXml);
 
@@ -94,11 +112,10 @@ namespace Acts
         private void CreateAllActs(string randomFolder)
         {
             var data = new ExcelImporter(PathToExcel).GetData();
-            var counter = 0;
 
             for (var value = 1; value < data.GetLength(1); value++)
             {
-                if (counter++ % 5 == 0)
+                if (value % 5 == 0)
                 {
                     Console.Write(".");
                 }
@@ -118,6 +135,10 @@ namespace Acts
 
                 for (var d = 0; d < data.GetLength(0); d++)
                 {
+                    if (dict.ContainsKey(data[d, 0]))
+                    {
+                        throw new Exception("Some values consist more than one columns. Also, you can't use the same values in the different columns.");
+                    }
                     dict.Add(data[d, 0], data[d, value]);
                 }
 
