@@ -13,13 +13,13 @@ namespace Acts
     {
         private readonly object LockObject;
         private readonly string PathToTemplate;
-        private readonly string PathToExcel;
+        private readonly string PathToValues;
 
-        public Docs(string pathToTemplate, string pathToExcel)
+        public Docs(string pathToTemplate, string pathToValues, string pathToReasons)
         {
             LockObject = new object();
             PathToTemplate = pathToTemplate;
-            PathToExcel = pathToExcel;
+            PathToValues = pathToValues;
         }
 
         public void Execute()
@@ -111,9 +111,9 @@ namespace Acts
 
         private void CreateAllActs(string randomFolder)
         {
-            var data = new ExcelImporter(PathToExcel).GetData();
+            var values = new ExcelImporter(PathToValues).GetData();
 
-            for (var value = 1; value < data.GetLength(1); value++)
+            for (var value = 1; value < values.GetLength(1); value++)
             {
                 if (value % 5 == 0)
                 {
@@ -133,15 +133,32 @@ namespace Acts
                     File.Copy(PathToTemplate, copyPath);
                 }
 
-                var dict = new Dictionary<string, string>();
+                var pairsForReplacings = new Dictionary<string, string>();
 
-                for (var d = 0; d < data.GetLength(0); d++)
+                // Add name of columns in the dictionary
+                for (var d = 0; d < values.GetLength(0); d++)
                 {
-                    if (dict.ContainsKey(data[d, 0]))
+                    if (pairsForReplacings.ContainsKey(values[d, 0]))
                     {
                         throw new Exception("Some values consist more than one columns. Also, you can't use the same values in the different columns.");
                     }
-                    dict.Add(data[d, 0], data[d, value]);
+                    pairsForReplacings.Add(values[d, 0], values[d, value]);
+                }
+
+                if (pairsForReplacings.ContainsKey("Reason"))
+                {
+                    throw new Exception("Your Values can't contain \"Reason\" column!");
+                }
+
+                if (pairsForReplacings.ContainsKey("Name") || pairsForReplacings.ContainsKey("name"))
+                {
+                    pairsForReplacings.Add("Reason", GetReasonByName(pairsForReplacings.ContainsKey("Name") ? pairsForReplacings["Name"] : pairsForReplacings["name"]));
+                }
+                else
+                {
+                    Console.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                    Console.WriteLine("We couldn't find the column named \"Name\" or \"name\". The reasins will not be replaced!");
+                    Console.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                 }
 
                 using (var doc = WordprocessingDocument.Open(copyPath, true))
@@ -149,7 +166,7 @@ namespace Acts
                     var body = doc.MainDocumentPart.Document.Body;
                     var texts = body.Descendants<Text>();
 
-                    foreach (var pair in dict)
+                    foreach (var pair in pairsForReplacings)
                     {
                         var tokenTexts = texts.Where(t => t.Text.Contains(pair.Key));
                         foreach (var token in tokenTexts)
@@ -167,7 +184,7 @@ namespace Acts
                     doc.MainDocumentPart.Document.Save();
                 }
             }
-            Console.WriteLine($"Acts created: {data.GetLength(1)}");
+            Console.WriteLine($"Acts created: {values.GetLength(1)}");
         }
 
         private IList<byte[]> GetStreamAllFiles(string randomFolder)
@@ -202,6 +219,11 @@ namespace Acts
             }
 
             Directory.Delete($"{Path.GetDirectoryName(PathToTemplate)}\\{randomFolder}");
+        }
+
+        private string GetReasonByName(string equipmentName)
+        {
+            return String.Empty;
         }
     }
 }
