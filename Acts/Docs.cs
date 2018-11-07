@@ -14,12 +14,14 @@ namespace Acts
         private readonly object LockObject;
         private readonly string PathToTemplate;
         private readonly string PathToValues;
+        private readonly string PathToReasons;
 
         public Docs(string pathToTemplate, string pathToValues, string pathToReasons)
         {
             LockObject = new object();
             PathToTemplate = pathToTemplate;
             PathToValues = pathToValues;
+            PathToReasons = pathToReasons;
         }
 
         public void Execute()
@@ -112,6 +114,7 @@ namespace Acts
         private void CreateAllActs(string randomFolder)
         {
             var values = new ExcelImporter(PathToValues).GetData();
+            var reasons = new ExcelImporter(PathToReasons).GetData().ToReasonModel();
 
             for (var value = 1; value < values.GetLength(1); value++)
             {
@@ -145,14 +148,15 @@ namespace Acts
                     pairsForReplacings.Add(values[d, 0], values[d, value]);
                 }
 
-                if (pairsForReplacings.ContainsKey("Reason"))
+                if (pairsForReplacings.ContainsKey("reason"))
                 {
-                    throw new Exception("Your Values can't contain \"Reason\" column!");
+                    throw new Exception("Your Values can't contain \"reason\" column!");
                 }
 
                 if (pairsForReplacings.ContainsKey("Name") || pairsForReplacings.ContainsKey("name"))
                 {
-                    pairsForReplacings.Add("Reason", GetReasonByName(pairsForReplacings.ContainsKey("Name") ? pairsForReplacings["Name"] : pairsForReplacings["name"]));
+                    var equipmentName = pairsForReplacings.ContainsKey("Name") ? pairsForReplacings["Name"] : pairsForReplacings["name"];
+                    pairsForReplacings.Add("reason", reasons.GetReasonByEquipmentName(equipmentName));
                 }
                 else
                 {
@@ -166,7 +170,7 @@ namespace Acts
                     var body = doc.MainDocumentPart.Document.Body;
                     var texts = body.Descendants<Text>();
 
-                    foreach (var pair in pairsForReplacings)
+                    foreach (var pair in pairsForReplacings.Where(i => !String.IsNullOrWhiteSpace(i.Key)))
                     {
                         var tokenTexts = texts.Where(t => t.Text.Contains(pair.Key));
                         foreach (var token in tokenTexts)
@@ -219,11 +223,6 @@ namespace Acts
             }
 
             Directory.Delete($"{Path.GetDirectoryName(PathToTemplate)}\\{randomFolder}");
-        }
-
-        private string GetReasonByName(string equipmentName)
-        {
-            return String.Empty;
         }
     }
 }
