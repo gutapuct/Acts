@@ -148,15 +148,15 @@ namespace Acts
                     pairsForReplacings.Add(values[d, 0], values[d, value]);
                 }
 
-                if (pairsForReplacings.ContainsKey("reason"))
-                {
-                    throw new Exception("Your Values can't contain \"reason\" column!");
-                }
+                CheckColumnName(pairsForReplacings, "reason");
+                CheckColumnName(pairsForReplacings, "recommendation");
 
                 if (pairsForReplacings.ContainsKey("Name") || pairsForReplacings.ContainsKey("name"))
                 {
                     var equipmentName = pairsForReplacings.ContainsKey("Name") ? pairsForReplacings["Name"] : pairsForReplacings["name"];
-                    pairsForReplacings.Add("reason", reasons.GetReasonByEquipmentName(equipmentName));
+                    var reason = reasons.GetReasonByEquipmentName(equipmentName);
+                    pairsForReplacings.Add("reason", reason.NameReason);
+                    pairsForReplacings.Add("recommendation", reason.NameRecommendation);
                 }
                 else
                 {
@@ -223,6 +223,14 @@ namespace Acts
             }
 
             Directory.Delete($"{Path.GetDirectoryName(PathToTemplate)}\\{randomFolder}");
+        }
+
+        private void CheckColumnName (Dictionary<string, string> pairsForReplacings, string column)
+        {
+            if (pairsForReplacings.ContainsKey(column))
+            {
+                throw new Exception($"Your Values can't contain \"{column}\" column!");
+            }
         }
     }
 }

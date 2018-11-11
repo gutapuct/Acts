@@ -14,7 +14,13 @@ namespace Acts
 
     public class Reason
     {
+        public Reason()
+        {
+            this.NameReason = "Not found!!!";
+            this.NameRecommendation = "Not found!!!";
+        }
         public string NameReason { get; set; }
+        public string NameRecommendation { get; set; }
         public bool WasUsed { get; set; }
     }
 
@@ -32,11 +38,16 @@ namespace Acts
                     var reason = data[column, line];
                     if (!String.IsNullOrWhiteSpace(reason))
                     {
-                        reasons.Add(new Reason
+                        var reasonAndRecommendation = reason.Split('|');
+                        if (reasonAndRecommendation.Where(i => i.Length > 0).Count() == 2)
                         {
-                            NameReason = reason,
-                            WasUsed = false
-                        });
+                            reasons.Add(new Reason
+                            {
+                                NameReason = reasonAndRecommendation[0].Trim(),
+                                NameRecommendation = reasonAndRecommendation[1].Trim(),
+                                WasUsed = false
+                            });
+                        }
                     }
                 }
                 if (reasons.Count > 0)
@@ -52,9 +63,9 @@ namespace Acts
             return result;
         }
 
-        public static string GetReasonByEquipmentName(this List<ReasonsModel> reasons, string equipmentName)
+        public static Reason GetReasonByEquipmentName(this List<ReasonsModel> reasons, string equipmentName)
         {
-            equipmentName = equipmentName.ToLower();
+            equipmentName = equipmentName.ToLower().Trim();
 
             ReasonsModel line = null;
             foreach (var reasonsModel in reasons)
@@ -66,8 +77,8 @@ namespace Acts
                     break;
                 }
             }
-                
-            if (line == null) return "Not found!!!";
+
+            if (line == null) return new Reason();
 
             var reason = line.Reasons.Where(i => !i.WasUsed).FirstOrDefault();
             if (reason == null)
@@ -77,7 +88,7 @@ namespace Acts
             }
 
             reason.WasUsed = true;
-            return reason.NameReason;
+            return reason;
         }
     }
 }
