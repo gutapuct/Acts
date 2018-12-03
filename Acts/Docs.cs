@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -16,6 +17,8 @@ namespace Acts
         private readonly string PathToValues;
         private readonly string PathToReasons;
 
+        public static Stopwatch timer = new Stopwatch();
+
         public Docs(string pathToTemplate, string pathToValues, string pathToReasons)
         {
             LockObject = new object();
@@ -29,14 +32,24 @@ namespace Acts
             try
             {
                 var randomFolder = Guid.NewGuid().ToString();
+                Console.WriteLine();
+
+                timer.Start();
                 Console.Write("Creating acts...");
                 CreateAllActs(randomFolder);
                 Console.WriteLine("Done.");
+                timer.Stop();
+                Console.WriteLine("Time: " + timer.Elapsed);
+                timer.Reset();
                 Console.WriteLine();
 
+                timer.Start();
                 Console.WriteLine("Getting new all files...");
                 var files = GetStreamAllFiles(randomFolder);
                 Console.WriteLine("Done.");
+                timer.Stop();
+                Console.WriteLine("Time: " + timer.Elapsed);
+                timer.Reset();
                 Console.WriteLine();
 
                 Console.Write("Creating the new general file...");
@@ -44,9 +57,14 @@ namespace Acts
                 Console.WriteLine("Done.");
                 Console.WriteLine();
 
+                timer.Start();
                 Console.WriteLine("Deleting temp files...");
                 RemoveFiles(randomFolder);
                 Console.WriteLine("Done. Press any key to exit.");
+                timer.Stop();
+                Console.WriteLine("Time: " + timer.Elapsed);
+                timer.Reset();
+                Console.WriteLine("Press any key to exit.");
                 Console.ReadKey();
             }
             catch (Exception ex)
@@ -207,10 +225,23 @@ namespace Acts
 
         private void SaveNewFile(IList<byte[]> files)
         {
+            timer.Start();
             var result = this.OpenAndCombine(files);
+            timer.Stop();
+            Console.WriteLine("Time (OpenAndCombine): " + timer.Elapsed);
+            timer.Reset();
 
+            timer.Start();
             using (var newFile = File.Create($"{Path.GetDirectoryName(PathToTemplate)}\\Acts.docx")) { }
+            timer.Stop();
+            Console.WriteLine("Time (NewFileCreate): " + timer.Elapsed);
+            timer.Reset();
+
+            timer.Start();
             File.WriteAllBytes($"{Path.GetDirectoryName(PathToTemplate)}\\Acts.docx", result);
+            timer.Stop();
+            Console.WriteLine("Time (File.WriteAllBytes): " + timer.Elapsed);
+            timer.Reset();
         }
 
         private void RemoveFiles(string randomFolder)
